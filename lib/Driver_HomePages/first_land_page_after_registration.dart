@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:final_menu/Driver_initial-auth/driver_registration_page.dart';
 import 'package:final_menu/homepage.dart';
 import 'package:final_menu/login_screen/sign_up_page.dart';
@@ -22,11 +24,14 @@ class _DriverHomePageState extends State<DriverHomePage> {
   List<Map<String, dynamic>> _tripDataList = [];
   bool _isLoading = false;
   final ScrollController _scrollController = ScrollController();
-
+Timer? _removeOldTripsTimer;
   @override
   void initState() {
     super.initState();
     _fetchTrips();
+    _removeOldTripsTimer = Timer.periodic(const Duration(minutes: 1), (timer) {
+    _removeOldTrips();
+  });
     _scrollController.addListener(() {
       if (_scrollController.position.pixels ==
           _scrollController.position.maxScrollExtent) {
@@ -34,6 +39,8 @@ class _DriverHomePageState extends State<DriverHomePage> {
       }
     });
   }
+
+
 
   Future<void> _fetchTrips() async {
     if (_isLoading || !_hasMore) return;
@@ -164,22 +171,6 @@ class _DriverHomePageState extends State<DriverHomePage> {
     }
   }
 
-  // Future<void> _signOut() async {
-  //   try {
-  //     await FirebaseAuth.instance.signOut();
-  //     Navigator.of(context).pushReplacement(
-  //       MaterialPageRoute(builder: (context) => DriverRegistrationPage()),
-  //     );
-  //   } catch (e) {
-  //     print("Error signing out: $e");
-  //   }
-  // }
-
-
-
-
-
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -295,7 +286,8 @@ class _DriverHomePageState extends State<DriverHomePage> {
   @override
   void dispose() {
     _scrollController.dispose();
-    ; // Cancel the timer when disposing
+    _removeOldTripsTimer?.cancel(); 
     super.dispose();
   }
 }
+

@@ -472,10 +472,10 @@ class _RegistrationPageState extends State<RegistrationPage> {
                 children: [
                   Opacity(
                     opacity: 0.8,
-                    child: const Image(
+                    child:  Image(
                       image: NetworkImage(
                           'https://i.postimg.cc/j27Q02yg/auto-removebg-preview.png'),
-                      height: 100,
+                      height: screenHeight *0.07,
                       width: 130,
                     ),
                   ),
