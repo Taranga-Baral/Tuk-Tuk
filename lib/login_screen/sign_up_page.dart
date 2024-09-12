@@ -395,7 +395,6 @@ class _RegistrationPageState extends State<RegistrationPage> {
 
         // If sign in is successful
         if (userCredential.user != null) {
-          // Store additional user information in Firestore
           final uid = userCredential.user!.uid;
           await FirebaseFirestore.instance.collection('users').doc(uid).set({
             'username': _usernameController.text,
@@ -416,7 +415,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(
                   builder: (context) =>
-                      HomePage1()), // Replace with your actual homepage widget
+                      HomePage1()), 
             );
           });
 
@@ -429,7 +428,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
       } catch (e) {
         print('Error Signing Up: $e');
         // Handle sign in errors here
-        // Optionally show an error dialog to the user
+        
         showDialog(
           context: context,
           builder: (context) => AlertDialog(

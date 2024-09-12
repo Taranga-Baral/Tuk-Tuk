@@ -344,7 +344,7 @@ SizedBox(
                 child: Column(
                   children: [
                     if (_activeStep == 0) ...[
-                      // Terms & Conditions Step
+                      // Terms haru
                       Container(
                         padding: const EdgeInsets.all(16.0),
                         child: Column(
@@ -358,7 +358,7 @@ SizedBox(
                             SingleChildScrollView(
                               scrollDirection: Axis.vertical,
                               child: SizedBox(
-                                height: 400, // Set height for scrollable area
+                                height: 400, 
                                 child: ListView(
                                   children: [
                                     Text(
@@ -502,7 +502,6 @@ SizedBox(
                       ),
                     ],
                     if (_activeStep == 3) ...[
-                      // Personal Information Step
                       TextField(
                         controller: _nameController,
                         decoration: const InputDecoration(

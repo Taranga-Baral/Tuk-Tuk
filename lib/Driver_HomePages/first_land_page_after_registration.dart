@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:card_loading/card_loading.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // Import FirebaseAuth
+import 'package:firebase_auth/firebase_auth.dart'; 
 
 class DriverHomePage extends StatefulWidget {
   const DriverHomePage({super.key});
@@ -41,7 +41,7 @@ Timer? _removeOldTripsTimer;
   }
 
 
-
+//fetches trip
   Future<void> _fetchTrips() async {
     if (_isLoading || !_hasMore) return;
     setState(() => _isLoading = true);
@@ -89,7 +89,7 @@ Timer? _removeOldTripsTimer;
     });
     await _fetchTrips();
   }
-
+//removes trip which iss olfer than 30 mins
   Future<void> _removeOldTrips() async {
     final now = DateTime.now();
     final cutoff = now.subtract(const Duration(minutes: 30));
@@ -134,7 +134,7 @@ Timer? _removeOldTripsTimer;
   int _compareByIntegerPart(double? num1, double? num2) {
     return (num1?.truncate() ?? 0).compareTo(num2?.truncate() ?? 0);
   }
-
+//phone ocon launches with deletion tooooo
   Future<void> _launchPhone(String phoneNumber, String tripId) async {
     try {
       DocumentSnapshot tripSnapshot = await FirebaseFirestore.instance
