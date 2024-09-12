@@ -16,7 +16,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   InAppWebViewController? webView;
-  bool _isLoading = true; // Flag to control the splash screen visibility
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -25,7 +25,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _startDelay() async {
-    // Delay for 1 seconds before hiding the loading indicator and showing the web page
     await Future.delayed(Duration(seconds: 1));
     if (mounted) {
       setState(() {
@@ -35,95 +34,84 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<String> _getDistanceFromAPI(String location1, String location2) async {
-    String apiUrl =
-        'https://distance-api3.p.rapidapi.com/distance?location1=$location1&location2=$location2&unit=kilometers';
-    String apiKey = 'cd3125ef15msh2caab8018e8198ap187972jsnb9ff3f522f8e';
-    var response = await http.get(
-      Uri.parse(apiUrl),
-      headers: {
-        'X-Rapidapi-Key': apiKey,
-        'X-Rapidapi-Host': 'distance-api3.p.rapidapi.com',
-      },
-    );
+    final apiUrl = 'https://distance-api3.p.rapidapi.com/distance?location1=$location1&location2=$location2&unit=kilometers';
+    final apiKey = 'cd3125ef15msh2caab8018e8198ap187972jsnb9ff3f522f8e';
+    
+    try {
+      final response = await http.get(
+        Uri.parse(apiUrl),
+        headers: {
+          'X-Rapidapi-Key': apiKey,
+          'X-Rapidapi-Host': 'distance-api3.p.rapidapi.com',
+        },
+      );
 
-    if (response.statusCode == 200) {
-      var jsonResponse = jsonDecode(response.body);
-      String distance = jsonResponse['distance'].toString();
-      return distance;
-    } else {
-      return 'N/A';
+      if (response.statusCode == 200) {
+        final jsonResponse = jsonDecode(response.body);
+        return jsonResponse['distance'].toString();
+      }
+    } catch (e) {
+      print('Error fetching distance: $e');
     }
+    return 'N/A';
   }
 
-  // Function to fetch user details from Firebase
   Future<Map<String, dynamic>> _getUserDetails() async {
-    User? user = FirebaseAuth.instance.currentUser;
+    final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      DocumentSnapshot userDoc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .get();
-      if (userDoc.exists) {
-        // Safely return the data or an empty map if the data is null
+      try {
+        final userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
         return userDoc.data() as Map<String, dynamic>? ?? {};
+      } catch (e) {
+        print('Error fetching user details: $e');
       }
     }
-    // Return an empty map if the user is not found or data is not available
     return {};
   }
 
-  // Function to calculate fare
   double _calculateFare(String distance) {
     double distanceInKm;
-
     try {
       distanceInKm = double.parse(distance);
     } catch (e) {
-      // Handle the error if the string cannot be parsed as a double
       print('Error parsing distance: $e');
-      return 0.0; // Return 0 or another default value in case of an error
+      return 0.0;
     }
-
-    double distanceInMeters = distanceInKm * 1000;
-    double fare =
-        (distanceInMeters / 100) * 2.2; // For every 100 meters, fare is 2.4
-    return fare;
+    final distanceInMeters = distanceInKm * 1000;
+    return (distanceInMeters / 100) * 2;
   }
 
-  // Function to store data in Firebase Firestore
   Future<void> _storeDataInFirestore(Map<String, dynamic> data) async {
-    String uniqueKey = FirebaseFirestore.instance
-        .collection('trips')
-        .doc()
-        .id; // Generate unique key
-    await FirebaseFirestore.instance
-        .collection('trips')
-        .doc(uniqueKey)
-        .set(data);
+    final uniqueKey = FirebaseFirestore.instance.collection('trips').doc().id;
+    try {
+      await FirebaseFirestore.instance.collection('trips').doc(uniqueKey).set(data);
+    } catch (e) {
+      print('Error storing data: $e');
+    }
   }
 
   void _showSnackbar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        duration: Duration(seconds: 5),
-      ),
-    );
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message), duration: Duration(seconds: 5)));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Text('Home Page'),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.of(context).pop(); // Go back to the previous page
+          },
+        ),
+      ),
       body: SafeArea(
         child: Stack(
           children: [
-            // Display the web view only after the delay
             if (!_isLoading)
               InAppWebView(
-                initialUrlRequest: URLRequest(
-                  url: WebUri(
-                      widget.url), // Use the map URL passed from HomePage
-                ),
+                initialUrlRequest: URLRequest(url: WebUri(widget.url)),
                 initialOptions: InAppWebViewGroupOptions(
                   crossPlatform: InAppWebViewOptions(
                     javaScriptEnabled: true,
@@ -132,152 +120,83 @@ class _HomePageState extends State<HomePage> {
                     mediaPlaybackRequiresUserGesture: false,
                   ),
                 ),
-                onWebViewCreated: (InAppWebViewController controller) {
+                onWebViewCreated: (controller) {
                   webView = controller;
                 },
                 onLoadStop: (controller, url) async {
                   await controller.evaluateJavascript(source: """
-        // Hide the "Map Viewer" text
-    var mapViewerElement = document.querySelector('h1.d-flex.m-0.fw-semibold');
-    if (mapViewerElement) mapViewerElement.style.display = 'none';
+                    var mapViewerElement = document.querySelector('h1.d-flex.m-0.fw-semibold');
+                    if (mapViewerElement) mapViewerElement.style.display = 'none';
 
-    // Remove the <a> element with class "btn btn-outline-primary geolink flex-grow-1" and id "history_tab"
-    var historyLinkElement = document.querySelector('a.btn.btn-outline-primary.geolink.flex-grow-1#history_tab');
-    if (historyLinkElement) historyLinkElement.remove();
-    
-    // Remove the element with classes "secondary d-flex gap-2 align-items-center"
-    var secondaryElement = document.querySelector('.secondary.d-flex.gap-2.align-items-center');
-    if (secondaryElement) secondaryElement.remove();
-    
-    // Remove the <a> element with class "btn btn-outline-primary geolink editlink" and id "editanchor"
-    var editLinkElement = document.querySelector('a.btn.btn-outline-primary.geolink.editlink#editanchor');
-    if (editLinkElement) editLinkElement.remove();
+                    var historyLinkElement = document.querySelector('a.btn.btn-outline-primary.geolink.flex-grow-1#history_tab');
+                    if (historyLinkElement) historyLinkElement.remove();
+                    
+                    var secondaryElement = document.querySelector('.secondary.d-flex.gap-2.align-items-center');
+                    if (secondaryElement) secondaryElement.remove();
+                    
+                    var editLinkElement = document.querySelector('a.btn.btn-outline-primary.geolink.editlink#editanchor');
+                    if (editLinkElement) editLinkElement.remove();
 
-    // Other JavaScript manipulation here...
-    result;
-  """).then((result) {
-                    if (result != null && result.isNotEmpty) {
-                      String distanceAndTime = result;
-                    }
-                  });
+                    result;
+                  """);
                 },
               ),
-            // Show circular progress indicator while loading
             if (_isLoading)
-              Center(
-                child:
-                    CircularProgressIndicator(), // Display progress indicator
-              ),
-            // Back button overlayed on the web view
-            Positioned(
-              bottom: 40,
-              left: 5,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                child: Icon(Icons.arrow_back),
-                style: ElevatedButton.styleFrom(
-                  shape: CircleBorder(),
-                  padding: EdgeInsets.all(10),
-                ),
-              ),
-            ),
-            // Show Location Button
+              Center(child: CircularProgressIndicator()),
             Positioned(
               bottom: 100,
               right: 5,
               child: ElevatedButton(
                 onPressed: () async {
-                  // Execute JavaScript to get the location details from the web page
-                  String pickupLocation =
-                      await webView?.evaluateJavascript(source: """
-    document.getElementById('route_from').value
-  """) ?? 'N/A';
+                  final pickupLocation = await webView?.evaluateJavascript(source: "document.getElementById('route_from').value") ?? 'N/A';
+                  final deliveryLocation = await webView?.evaluateJavascript(source: "document.getElementById('route_to').value") ?? 'N/A';
 
-                  String deliveryLocation =
-                      await webView?.evaluateJavascript(source: """
-    document.getElementById('route_to').value
-  """) ?? 'N/A';
+                  if (pickupLocation.isEmpty || deliveryLocation.isEmpty) {
+                    _showSnackbar('Enter Proper Address');
+                    return;
+                  }
 
-                  // Send the locations to the API to get the distance
-                  if (pickupLocation != 'N/A' && deliveryLocation != 'N/A') {
-                    String distance = await _getDistanceFromAPI(
-                        pickupLocation, deliveryLocation);
+                  final distance = await _getDistanceFromAPI(pickupLocation, deliveryLocation);
+                  final fare = _calculateFare(distance);
 
-                    // Calculate the fare
-                    double fare = _calculateFare(distance);
+                  final confirmed = await showDialog<bool>(
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (context) => AlertDialog(
+                      title: Text('Confirm Booking'),
+                      content: Text(
+                        'Pickup: $pickupLocation\n'
+                        'Delivery: $deliveryLocation\n'
+                        'Distance: $distance km\n'
+                        'Estimated Fare: NPR${fare.toStringAsFixed(2)}\n\n'
+                        'Are you sure you want to book this ride?',
+                      ),
+                      actions: <Widget>[
+                        TextButton(child: Text('Cancel'), onPressed: () => Navigator.of(context).pop(false)),
+                        TextButton(child: Text('Confirm'), onPressed: () => Navigator.of(context).pop(true)),
+                      ],
+                    ),
+                  );
 
-                    // Show confirmation dialog with fare details
-                    bool? confirmed = await showDialog<bool>(
-                      context: context,
-                      barrierDismissible:
-                          false, // Prevent dismissal by tapping outside the dialog
-                      builder: (BuildContext context) {
-                        return AlertDialog(
-                          title: Text('Confirm Booking'),
-                          content: Text(
-                            'Pickup: $pickupLocation\n'
-                            'Delivery: $deliveryLocation\n'
-                            'Distance: $distance km\n'
-                            'Estimated Fare: NPR${fare.toStringAsFixed(2)}\n\n'
-                            'Are you sure you want to book this ride?',
-                          ),
-                          actions: <Widget>[
-                            TextButton(
-                              child: Text('Cancel'),
-                              onPressed: () {
-                                Navigator.of(context).pop(
-                                    false); // Return false to indicate cancellation
-                              },
-                            ),
-                            TextButton(
-                              child: Text('Confirm'),
-                              onPressed: () {
-                                Navigator.of(context).pop(
-                                    true); // Return true to indicate confirmation
-                              },
-                            ),
-                          ],
-                        );
-                      },
-                    );
+                  if (confirmed == true) {
+                    final userDetails = await _getUserDetails();
+                    final data = {
+                      'username': userDetails['username'] ?? 'N/A',
+                      'email': userDetails['email'] ?? 'N/A',
+                      'phone': userDetails['phone_number'] ?? 'N/A',
+                      'pickupLocation': pickupLocation,
+                      'deliveryLocation': deliveryLocation,
+                      'distance': distance,
+                      'fare': fare.toStringAsFixed(2),
+                      'timestamp': FieldValue.serverTimestamp(),
+                    };
 
-                    if (confirmed == true) {
-                      // Proceed with the booking if confirmed
-                      // Get user details
-                      Map<String, dynamic> userDetails =
-                          await _getUserDetails();
-                      String username = userDetails['username'] ?? 'N/A';
-                      String email = userDetails['email'] ?? 'N/A';
-                      String phoneNumber = userDetails['phone_number'] ?? 'N/A';
+                    await _storeDataInFirestore(data);
 
-                      // Prepare the data for storage
-                      Map<String, dynamic> data = {
-                        'username': username,
-                        'email': email,
-                        'phone': phoneNumber,
-                        'pickupLocation': pickupLocation,
-                        'deliveryLocation': deliveryLocation,
-                        'distance': distance,
-                        'fare': fare.toStringAsFixed(2),
-                        'timestamp': FieldValue
-                            .serverTimestamp(), // Add server timestamp
-                      };
-
-                      // Store the data in Firestore
-                      await _storeDataInFirestore(data);
-
-                      // Show the Snackbar with all the details, including the calculated fare
-                      _showSnackbar(
-                          'Username: $username\nEmail: $email\nPhone: $phoneNumber\nPickup: $pickupLocation\nDelivery: $deliveryLocation\nDistance: $distance km\nFare: NPR${fare.toStringAsFixed(2)}');
-                    } else {
-                      // Handle cancellation
-                      _showSnackbar('Booking cancelled.');
-                    }
-                  } else {
                     _showSnackbar(
-                        'Could not retrieve pickup or delivery location.');
+                        'Username: ${userDetails['username']}\nEmail: ${userDetails['email']}\nPhone: ${userDetails['phone_number']}\nPickup: $pickupLocation\nDelivery: $deliveryLocation\nDistance: $distance km\nFare: NPR${fare.toStringAsFixed(2)}');
+                  } else {
+                    _showSnackbar('Booking cancelled.');
                   }
                 },
                 child: Text('Book a Ride'),

@@ -1,3 +1,5 @@
+import 'package:final_menu/Driver_initial-auth/initial_auth_field.dart';
+import 'package:final_menu/login_screen/sign_in_page.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -87,6 +89,7 @@ class _DriverRegistrationPageState extends State<DriverRegistrationPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        
         title: const Text('Driver Registration'),
       ),
       body: Padding(
@@ -94,6 +97,45 @@ class _DriverRegistrationPageState extends State<DriverRegistrationPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+             GestureDetector(
+              onTap: () {
+                Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => DriverAuthPage()));
+              },
+              child: const Text(
+                ' New Driver? Register Here (Driver Mode)',
+                style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.w600,
+                    decoration: TextDecoration.underline,
+                    decorationColor: Color.fromARGB(255, 101, 12, 185)),
+              ),
+            ),
+            SizedBox(
+              height: 5,
+            ),
+            GestureDetector(
+              onTap: () {
+                Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => SignInPage()));
+              },
+              child: const Text(
+                ' Passenger Mode',
+                style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.w600,
+                    decoration: TextDecoration.underline,
+                    decorationColor: Color.fromARGB(255, 101, 12, 185)),
+              ),
+            ),
+
+            SizedBox(
+              height: 20,
+            ),
             const Text(
               'Enter your registered email:',
               style: TextStyle(fontSize: 16),

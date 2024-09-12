@@ -1,10 +1,9 @@
-
-
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:final_menu/Driver_HomePages/first_land_page_after_registration.dart';
 import 'package:final_menu/Driver_initial-auth/driver_registration_page.dart';
 import 'package:final_menu/homepage.dart';
+import 'package:final_menu/login_screen/sign_in_page.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
 import 'package:flutter/foundation.dart';
@@ -17,20 +16,20 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class DriverAuthPage extends StatefulWidget {
   @override
-  
   _DriverAuthPageState createState() => _DriverAuthPageState();
 }
 
 class _DriverAuthPageState extends State<DriverAuthPage> {
   void showSnackBar(BuildContext context, String message) {
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content: Text(message),
-      duration: const Duration(seconds: 3),
-      behavior: SnackBarBehavior.floating,
-    ),
-  );
-}
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        duration: const Duration(seconds: 3),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
   DateTime? _selectedDateOfBirth;
   final _picker = ImagePicker();
   String _selectedVehicleType = 'Tuk Tuk'; // Default value for dropdown
@@ -125,95 +124,99 @@ class _DriverAuthPageState extends State<DriverAuthPage> {
     return compressedFile;
   }
 
- 
-
-Future<String?> _uploadImage(File imageFile, String imageType, String userId) async {
-  try {
-    final compressedImageFile = await _compressImage(imageFile);
-    final storageRef = FirebaseStorage.instance.ref().child(
-        'images/$userId/$imageType/${DateTime.now().millisecondsSinceEpoch}.jpg');
-    final uploadTask = storageRef.putFile(compressedImageFile!);
-    final snapshot = await uploadTask;
-    final downloadUrl = await snapshot.ref.getDownloadURL();
-    return downloadUrl;
-  } catch (e) {
-    print('Error uploading image: $e');
-    return null;
-  }
-}
-
-Future<void> _submitForm() async {
-  if (_bluebookPhoto == null ||
-      _citizenshipFrontPhoto == null ||
-      _licenseFrontPhoto == null ||
-      _selfieWithCitizenshipPhoto == null ||
-      _selfieWithLicensePhoto == null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Please upload all required photos.')),
-    );
-    return;
+  Future<String?> _uploadImage(
+      File imageFile, String imageType, String userId) async {
+    try {
+      final compressedImageFile = await _compressImage(imageFile);
+      final storageRef = FirebaseStorage.instance.ref().child(
+          'images/$userId/$imageType/${DateTime.now().millisecondsSinceEpoch}.jpg');
+      final uploadTask = storageRef.putFile(compressedImageFile!);
+      final snapshot = await uploadTask;
+      final downloadUrl = await snapshot.ref.getDownloadURL();
+      return downloadUrl;
+    } catch (e) {
+      print('Error uploading image: $e');
+      return null;
+    }
   }
 
-  try {
-    String userId = _emailController.text; // Unique identifier (email)
-
-    // Upload images and get URLs
-    if (_bluebookPhoto != null) {
-      _bluebookPhotoUrl = await _uploadImage(_bluebookPhoto!, 'bluebook', userId);
-    }
-    if (_citizenshipFrontPhoto != null) {
-      _citizenshipFrontUrl = await _uploadImage(_citizenshipFrontPhoto!, 'citizenshipFront', userId);
-    }
-    if (_licenseFrontPhoto != null) {
-      _licenseFrontUrl = await _uploadImage(_licenseFrontPhoto!, 'licenseFront', userId);
-    }
-    if (_selfieWithCitizenshipPhoto != null) {
-      _selfieWithCitizenshipUrl = await _uploadImage(_selfieWithCitizenshipPhoto!, 'selfieWithCitizenship', userId);
-    }
-    if (_selfieWithLicensePhoto != null) {
-      _selfieWithLicenseUrl = await _uploadImage(_selfieWithLicensePhoto!, 'selfieWithLicense', userId);
+  Future<void> _submitForm() async {
+    if (_bluebookPhoto == null ||
+        _citizenshipFrontPhoto == null ||
+        _licenseFrontPhoto == null ||
+        _selfieWithCitizenshipPhoto == null ||
+        _selfieWithLicensePhoto == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please upload all required photos.')),
+      );
+      return;
     }
 
-    // Save data to Firestore
-    final vehicleData = FirebaseFirestore.instance.collection('vehicleData');
-    await vehicleData.doc(userId).set({
-      'vehicleType': _selectedVehicleType,
-      'numberPlate': _numberPlateController.text,
-      'brand': _brandController.text,
-      'color': _colorController.text,
-      'bluebookPhotoUrl': _bluebookPhotoUrl ?? '',
-      'licenseNumber': _licenseNumberController.text,
-      'citizenshipFrontUrl': _citizenshipFrontUrl ?? '',
-      'licenseFrontUrl': _licenseFrontUrl ?? '',
-      'selfieWithCitizenshipUrl': _selfieWithCitizenshipUrl ?? '',
-      'selfieWithLicenseUrl': _selfieWithLicenseUrl ?? '',
-      'name': _nameController.text,
-      'address': _addressController.text,
-      'dob': _dobController.text,
-      'email': _emailController.text,
-      'phone': _phoneController.text,
-    });
+    try {
+      String userId = _emailController.text; // Unique identifier (email)
 
-    // ignore: use_build_context_synchronously
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Successful Registration.')),
-    );
+      // Upload images and get URLs
+      if (_bluebookPhoto != null) {
+        _bluebookPhotoUrl =
+            await _uploadImage(_bluebookPhoto!, 'bluebook', userId);
+      }
+      if (_citizenshipFrontPhoto != null) {
+        _citizenshipFrontUrl = await _uploadImage(
+            _citizenshipFrontPhoto!, 'citizenshipFront', userId);
+      }
+      if (_licenseFrontPhoto != null) {
+        _licenseFrontUrl =
+            await _uploadImage(_licenseFrontPhoto!, 'licenseFront', userId);
+      }
+      if (_selfieWithCitizenshipPhoto != null) {
+        _selfieWithCitizenshipUrl = await _uploadImage(
+            _selfieWithCitizenshipPhoto!, 'selfieWithCitizenship', userId);
+      }
+      if (_selfieWithLicensePhoto != null) {
+        _selfieWithLicenseUrl = await _uploadImage(
+            _selfieWithLicensePhoto!, 'selfieWithLicense', userId);
+      }
 
-    // Wait for 1 second before navigating to the next page
-    await Future.delayed(const Duration(seconds: 1));
+      // Save data to Firestore
+      final vehicleData = FirebaseFirestore.instance.collection('vehicleData');
+      await vehicleData.doc(userId).set({
+        'vehicleType': _selectedVehicleType,
+        'numberPlate': _numberPlateController.text,
+        'brand': _brandController.text,
+        'color': _colorController.text,
+        'bluebookPhotoUrl': _bluebookPhotoUrl ?? '',
+        'licenseNumber': _licenseNumberController.text,
+        'citizenshipFrontUrl': _citizenshipFrontUrl ?? '',
+        'licenseFrontUrl': _licenseFrontUrl ?? '',
+        'selfieWithCitizenshipUrl': _selfieWithCitizenshipUrl ?? '',
+        'selfieWithLicenseUrl': _selfieWithLicenseUrl ?? '',
+        'name': _nameController.text,
+        'address': _addressController.text,
+        'dob': _dobController.text,
+        'email': _emailController.text,
+        'phone': _phoneController.text,
+      });
 
-    // Navigate to HI.dart
-    Navigator.pushReplacement(
       // ignore: use_build_context_synchronously
-      context,
-      MaterialPageRoute(builder: (context) => DriverHomePage()), // Replace HI with the correct page name
-    );
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Successful Registration.')),
+      );
 
-  } catch (e) {
-    print('Error submitting form: $e');
+      // Wait for 1 second before navigating to the next page
+      await Future.delayed(const Duration(seconds: 1));
+
+      // Navigate to HI.dart
+      Navigator.pushReplacement(
+        // ignore: use_build_context_synchronously
+        context,
+        MaterialPageRoute(
+            builder: (context) =>
+                DriverHomePage()), // Replace HI with the correct page name
+      );
+    } catch (e) {
+      print('Error submitting form: $e');
+    }
   }
-}
-
 
   Future<void> _selectDateOfBirth() async {
     final DateTime? pickedDate = await showDatePicker(
@@ -235,17 +238,15 @@ Future<void> _submitForm() async {
   @override
   void initState() {
     super.initState();
-    _checkLoginStatus();  // Check if the user is already logged in
+    _checkLoginStatus(); // Check if the user is already logged in
   }
 
-
-
-   Future<void> _checkLoginStatus() async {
+  Future<void> _checkLoginStatus() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? savedEmail = prefs.getString('driverEmail');
 
     if (savedEmail != null) {
-      // Email is already saved, navigate to DriverHomePage directly
+      
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const DriverHomePage()),
@@ -253,8 +254,6 @@ Future<void> _submitForm() async {
     }
   }
 
-
-  
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -264,6 +263,46 @@ Future<void> _submitForm() async {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
+            GestureDetector(
+              onTap: () {
+                Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => DriverRegistrationPage()));
+              },
+              child: const Text(
+                ' Already? Sign In Here (Driver Mode)',
+                style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.w600,
+                    decoration: TextDecoration.underline,
+                    decorationColor: Color.fromARGB(255, 101, 12, 185)),
+              ),
+            ),
+
+
+SizedBox(
+  height: 5,
+),
+            GestureDetector(
+              onTap: () {
+                Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => SignInPage()));
+              },
+              child: const Text(
+                'Passenger Mode',
+                style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.w600,
+                    decoration: TextDecoration.underline,
+                    decorationColor: Color.fromARGB(255, 101, 12, 185)),
+              ),
+            ),
+
+
+
             EasyStepper(
               activeStep: _activeStep,
               onStepReached: (index) {
@@ -297,7 +336,6 @@ Future<void> _submitForm() async {
                   title: 'Personal Info',
                   icon: Icon(Icons.person),
                 ),
-                
               ],
             ),
             const SizedBox(height: 20),
@@ -533,8 +571,6 @@ Future<void> _submitForm() async {
                         child: const Text('Submit'),
                       )
                     ],
-                    
-
                   ],
                 ),
               ),

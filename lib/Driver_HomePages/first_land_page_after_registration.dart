@@ -1,8 +1,11 @@
+import 'package:final_menu/Driver_initial-auth/driver_registration_page.dart';
+import 'package:final_menu/homepage.dart';
+import 'package:final_menu/login_screen/sign_up_page.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:card_loading/card_loading.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'dart:async'; // Import dart:async for Timer
+import 'package:firebase_auth/firebase_auth.dart'; // Import FirebaseAuth
 
 class DriverHomePage extends StatefulWidget {
   const DriverHomePage({super.key});
@@ -25,21 +28,21 @@ class _DriverHomePageState extends State<DriverHomePage> {
     super.initState();
     _fetchTrips();
     _scrollController.addListener(() {
-      if (_scrollController.position.pixels == _scrollController.position.maxScrollExtent) {
+      if (_scrollController.position.pixels ==
+          _scrollController.position.maxScrollExtent) {
         _fetchTrips();
       }
     });
-    // Set up the timer to refresh the data every 1 minute
-   
   }
 
   Future<void> _fetchTrips() async {
     if (_isLoading || !_hasMore) return;
     setState(() => _isLoading = true);
 
-    Query query = FirebaseFirestore.instance.collection('trips')
-      .orderBy(_getSortField(), descending: _getSortDescending())
-      .limit(_itemsPerPage);
+    Query query = FirebaseFirestore.instance
+        .collection('trips')
+        .orderBy(_getSortField(), descending: _getSortDescending())
+        .limit(_itemsPerPage);
 
     if (_lastDocument != null) query = query.startAfterDocument(_lastDocument!);
 
@@ -51,7 +54,8 @@ class _DriverHomePageState extends State<DriverHomePage> {
         _lastDocument = querySnapshot.docs.last;
         var newTrips = querySnapshot.docs.map((doc) {
           var data = doc.data() as Map<String, dynamic>;
-          data['distance'] = double.tryParse(data['distance'] as String ?? '') ?? 0.0;
+          data['distance'] =
+              double.tryParse(data['distance'] as String ?? '') ?? 0.0;
           data['fare'] = double.tryParse(data['fare'] as String ?? '') ?? 0.0;
           data['tripId'] = doc.id;
           return data;
@@ -69,7 +73,6 @@ class _DriverHomePageState extends State<DriverHomePage> {
   }
 
   Future<void> _refreshTrips() async {
-    // Check and remove old data
     await _removeOldTrips();
 
     setState(() {
@@ -86,9 +89,9 @@ class _DriverHomePageState extends State<DriverHomePage> {
 
     try {
       final querySnapshot = await FirebaseFirestore.instance
-        .collection('trips')
-        .where('timestamp', isLessThan: cutoff)
-        .get();
+          .collection('trips')
+          .where('timestamp', isLessThan: cutoff)
+          .get();
 
       final oldDocs = querySnapshot.docs;
       if (oldDocs.isNotEmpty) {
@@ -101,7 +104,9 @@ class _DriverHomePageState extends State<DriverHomePage> {
     }
   }
 
-  String _getSortField() => _selectedSortOption == 'Timestamp Newest First' ? 'timestamp' : 'timestamp';
+  String _getSortField() => _selectedSortOption == 'Timestamp Newest First'
+      ? 'timestamp'
+      : 'timestamp';
   bool _getSortDescending() => _selectedSortOption == 'Timestamp Newest First';
 
   int _sortTrips(Map<String, dynamic> a, Map<String, dynamic> b) {
@@ -123,42 +128,32 @@ class _DriverHomePageState extends State<DriverHomePage> {
     return (num1?.truncate() ?? 0).compareTo(num2?.truncate() ?? 0);
   }
 
-  // Future<void> _launchPhone(String phoneNumber, String tripId) async {
-  //   final Uri launchUri = Uri(scheme: 'tel', path: phoneNumber);
-  //   if (await canLaunchUrl(launchUri)) {
-  //     await _deleteTrip(tripId);
-  //     await launchUrl(launchUri);
-  //   } else {
-  //     print('Could not launch $launchUri');
-  //   }
-  // }
   Future<void> _launchPhone(String phoneNumber, String tripId) async {
-  // Check if the trip still exists in Firebase
-  try {
-    DocumentSnapshot tripSnapshot = await FirebaseFirestore.instance.collection('trips').doc(tripId).get();
-    
-    if (tripSnapshot.exists) {
-      // Trip exists, proceed with the phone call
-      final Uri launchUri = Uri(scheme: 'tel', path: phoneNumber);
-      if (await canLaunchUrl(launchUri)) {
-        await _deleteTrip(tripId);
-        await launchUrl(launchUri);
-      } else {
-        print('Could not launch $launchUri');
-      }
-    } else {
-      // Trip does not exist, show a message to the user
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("User Already Booked")),
-        );
-      }
-    }
-  } catch (e) {
-    print("Error checking trip existence: $e");
-  }
-}
+    try {
+      DocumentSnapshot tripSnapshot = await FirebaseFirestore.instance
+          .collection('trips')
+          .doc(tripId)
+          .get();
 
+      if (tripSnapshot.exists) {
+        final Uri launchUri = Uri(scheme: 'tel', path: phoneNumber);
+        if (await canLaunchUrl(launchUri)) {
+          await _deleteTrip(tripId);
+          await launchUrl(launchUri);
+        } else {
+          print('Could not launch $launchUri');
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("User Already Booked")),
+          );
+        }
+      }
+    } catch (e) {
+      print("Error checking trip existence: $e");
+    }
+  }
 
   Future<void> _deleteTrip(String tripId) async {
     try {
@@ -169,6 +164,22 @@ class _DriverHomePageState extends State<DriverHomePage> {
     }
   }
 
+  // Future<void> _signOut() async {
+  //   try {
+  //     await FirebaseAuth.instance.signOut();
+  //     Navigator.of(context).pushReplacement(
+  //       MaterialPageRoute(builder: (context) => DriverRegistrationPage()),
+  //     );
+  //   } catch (e) {
+  //     print("Error signing out: $e");
+  //   }
+  // }
+
+
+
+
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -178,12 +189,12 @@ class _DriverHomePageState extends State<DriverHomePage> {
           PopupMenuButton<String>(
             onSelected: (value) {
               setState(() {
-                _selectedSortOption = value;
-                _tripDataList.clear();
-                _lastDocument = null;
-                _hasMore = true;
-                _fetchTrips();
-              });
+                  _selectedSortOption = value;
+                  _tripDataList.clear();
+                  _lastDocument = null;
+                  _hasMore = true;
+                  _fetchTrips();
+                });
             },
             itemBuilder: (context) => [
               'Timestamp Newest First',
@@ -191,7 +202,10 @@ class _DriverHomePageState extends State<DriverHomePage> {
               'Price Cheap First',
               'Distance Largest First',
               'Distance Smallest First',
-            ].map((choice) => PopupMenuItem(value: choice, child: Text(choice))).toList(),
+            ]
+                .map((choice) =>
+                    PopupMenuItem(value: choice, child: Text(choice)))
+                .toList(),
           ),
         ],
       ),
@@ -204,7 +218,8 @@ class _DriverHomePageState extends State<DriverHomePage> {
             if (index >= _tripDataList.length) {
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                child: CardLoading(height: 150, borderRadius: BorderRadius.circular(15)),
+                child: CardLoading(
+                    height: 150, borderRadius: BorderRadius.circular(15)),
               );
             }
             var tripData = _tripDataList[index];
@@ -212,7 +227,8 @@ class _DriverHomePageState extends State<DriverHomePage> {
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               child: Card(
                 color: Colors.white.withOpacity(0.95),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15)),
                 elevation: 5,
                 child: ListTile(
                   contentPadding: const EdgeInsets.all(16),
@@ -222,7 +238,8 @@ class _DriverHomePageState extends State<DriverHomePage> {
                       Expanded(
                         child: Text(
                           tripData['username'] ?? 'No Username',
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 18),
                         ),
                       ),
                       IconButton(
@@ -240,18 +257,36 @@ class _DriverHomePageState extends State<DriverHomePage> {
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Pickup: ${tripData['pickupLocation'] ?? 'No pickup location'}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w300)),
-                      Text('Delivery: ${tripData['deliveryLocation'] ?? 'No delivery location'}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w300)),
-                      Text('Distance: ${tripData['distance']?.toStringAsFixed(2) ?? 'No distance'} km', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w300)),
-                      Text('Fare: NPR ${tripData['fare']?.toStringAsFixed(2) ?? 'No fare'}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w300)),
-                      Text('Phone: ${tripData['phone'] ?? 'No phone'}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w300)),
-                      Text('Timestamp: ${tripData['timestamp']?.toDate() ?? 'No timestamp'}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                      Text(
+                          'Pickup: ${tripData['pickupLocation'] ?? 'No pickup location'}',
+                          style: const TextStyle(
+                              fontSize: 14, fontWeight: FontWeight.w300)),
+                      Text(
+                          'Delivery: ${tripData['deliveryLocation'] ?? 'No delivery location'}',
+                          style: const TextStyle(
+                              fontSize: 14, fontWeight: FontWeight.w300)),
+                      Text(
+                          'Distance: ${tripData['distance']?.toStringAsFixed(2) ?? 'No distance'} km',
+                          style: const TextStyle(
+                              fontSize: 14, fontWeight: FontWeight.w300)),
+                      Text(
+                          'Fare: NPR ${tripData['fare']?.toStringAsFixed(2) ?? 'No fare'}',
+                          style: const TextStyle(
+                              fontSize: 14, fontWeight: FontWeight.w300)),
+                      Text('Phone: ${tripData['phone'] ?? 'No phone'}',
+                          style: const TextStyle(
+                              fontSize: 14, fontWeight: FontWeight.w300)),
+                      Text(
+                          'Timestamp: ${tripData['timestamp']?.toDate() ?? 'No timestamp'}',
+                          style: const TextStyle(
+                              fontSize: 12, color: Colors.grey)),
                     ],
                   ),
                   isThreeLine: true,
                 ),
-              ),);
-            },
+              ),
+            );
+          },
         ),
       ),
     );
@@ -260,7 +295,7 @@ class _DriverHomePageState extends State<DriverHomePage> {
   @override
   void dispose() {
     _scrollController.dispose();
-; // Cancel the timer when disposing
+    ; // Cancel the timer when disposing
     super.dispose();
   }
 }
