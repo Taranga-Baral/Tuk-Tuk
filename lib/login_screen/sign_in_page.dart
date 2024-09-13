@@ -32,7 +32,9 @@ class _SignInPageState extends State<SignInPage> {
 
       if (userCredential.user != null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Sign In Successful'), duration: Duration(seconds: 1)),
+          SnackBar(
+              content: Text('Sign In Successful'),
+              duration: Duration(seconds: 1)),
         );
 
         Future.delayed(Duration(seconds: 1), () {
@@ -49,7 +51,9 @@ class _SignInPageState extends State<SignInPage> {
           title: Text('Sign In Failed'),
           content: Text('Invalid email or password. Please try again.'),
           actions: <Widget>[
-            TextButton(child: Text('OK'), onPressed: () => Navigator.of(context).pop()),
+            TextButton(
+                child: Text('OK'),
+                onPressed: () => Navigator.of(context).pop()),
           ],
         ),
       );
@@ -78,9 +82,10 @@ class _SignInPageState extends State<SignInPage> {
               children: [
                 Opacity(
                   opacity: 0.9,
-                  child:  Image(
-                    image: NetworkImage('https://i.postimg.cc/kX0t1Hx7/stock-vector-vector-design-of-auto-rickshaw-and-driver-2316837373-removebg-preview.png'),
-                    height: screenHeight *0.07,
+                  child: Image(
+                    image: NetworkImage(
+                        'https://i.postimg.cc/kX0t1Hx7/stock-vector-vector-design-of-auto-rickshaw-and-driver-2316837373-removebg-preview.png'),
+                    height: screenHeight * 0.07,
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -88,7 +93,8 @@ class _SignInPageState extends State<SignInPage> {
                   onTap: () {
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => RegistrationPage()),
+                      MaterialPageRoute(
+                          builder: (context) => RegistrationPage()),
                     );
                   },
                   child: const Text(
@@ -130,17 +136,20 @@ class _SignInPageState extends State<SignInPage> {
                     TextFormField(
                       controller: _controllerEmail,
                       decoration: const InputDecoration(
-                        prefixIconColor: const Color.fromARGB(255, 187, 109, 201),
+                        prefixIconColor:
+                            const Color.fromARGB(255, 187, 109, 201),
                         labelText: 'Enter your E-mail',
                         prefixIcon: Icon(Icons.email),
                         hintText: 'johndoe@gmail.com',
                         filled: true,
                         fillColor: Colors.white12,
                         enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Color.fromARGB(255, 182, 116, 194)),
+                          borderSide: BorderSide(
+                              color: Color.fromARGB(255, 182, 116, 194)),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Color.fromARGB(255, 200, 54, 244)),
+                          borderSide: BorderSide(
+                              color: Color.fromARGB(255, 200, 54, 244)),
                         ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.all(Radius.circular(18)),
@@ -151,16 +160,19 @@ class _SignInPageState extends State<SignInPage> {
                     TextFormField(
                       controller: _controllerPassword,
                       obscureText: _obscureText,
-                      
                       decoration: InputDecoration(
-                        suffixIconColor: const Color.fromARGB(255, 180, 113, 192),
-                        prefixIconColor: const Color.fromARGB(255, 187, 109, 201),
+                        suffixIconColor:
+                            const Color.fromARGB(255, 180, 113, 192),
+                        prefixIconColor:
+                            const Color.fromARGB(255, 187, 109, 201),
                         labelText: 'Enter your Password',
                         prefixIcon: const Icon(Icons.password),
                         filled: true,
                         fillColor: Colors.white12,
                         suffixIcon: IconButton(
-                          icon: Icon(_obscureText ? Icons.visibility_off : Icons.visibility),
+                          icon: Icon(_obscureText
+                              ? Icons.visibility_off
+                              : Icons.visibility),
                           onPressed: () {
                             setState(() {
                               _obscureText = !_obscureText;
@@ -168,10 +180,12 @@ class _SignInPageState extends State<SignInPage> {
                           },
                         ),
                         enabledBorder: const OutlineInputBorder(
-                          borderSide: BorderSide(color: Color.fromARGB(255, 182, 116, 194)),
+                          borderSide: BorderSide(
+                              color: Color.fromARGB(255, 182, 116, 194)),
                         ),
                         focusedBorder: const OutlineInputBorder(
-                          borderSide: BorderSide(color: Color.fromARGB(255, 200, 54, 244)),
+                          borderSide: BorderSide(
+                              color: Color.fromARGB(255, 200, 54, 244)),
                         ),
                         border: const OutlineInputBorder(
                           borderRadius: BorderRadius.all(Radius.circular(18)),
@@ -202,18 +216,21 @@ class _SignInPageState extends State<SignInPage> {
                     ),
                     const SizedBox(height: 25),
                     GestureDetector(
-                      onTap: (){
+                      onTap: () {
                         Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => DriverAuthPage()),
-                );
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => DriverAuthPage()),
+                        );
                       },
                       child: Container(
                         width: screenWidth * 0.9,
                         padding: EdgeInsets.all(screenHeight * 0.02),
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          border: Border.all(color: const Color.fromARGB(255, 200, 54, 244), width: 2),
+                          border: Border.all(
+                              color: const Color.fromARGB(255, 200, 54, 244),
+                              width: 2),
                           borderRadius: BorderRadius.circular(10),
                           boxShadow: [
                             BoxShadow(
@@ -236,7 +253,6 @@ class _SignInPageState extends State<SignInPage> {
                               ),
                             ),
                             const SizedBox(height: 8),
-                            
                           ],
                         ),
                       ),

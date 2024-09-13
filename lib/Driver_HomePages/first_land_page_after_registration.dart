@@ -1,13 +1,12 @@
-import 'dart:async';
 
-import 'package:final_menu/Driver_initial-auth/driver_registration_page.dart';
-import 'package:final_menu/homepage.dart';
-import 'package:final_menu/login_screen/sign_up_page.dart';
+
+import 'dart:async';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:card_loading/card_loading.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:firebase_auth/firebase_auth.dart'; 
 
 class DriverHomePage extends StatefulWidget {
   const DriverHomePage({super.key});
@@ -24,24 +23,23 @@ class _DriverHomePageState extends State<DriverHomePage> {
   List<Map<String, dynamic>> _tripDataList = [];
   bool _isLoading = false;
   final ScrollController _scrollController = ScrollController();
-Timer? _removeOldTripsTimer;
+  Timer? _removeOldTripsTimer;
+
   @override
   void initState() {
     super.initState();
     _fetchTrips();
     _removeOldTripsTimer = Timer.periodic(const Duration(minutes: 1), (timer) {
-    _removeOldTrips();
-  });
+      _removeOldTrips();
+    });
     _scrollController.addListener(() {
-      if (_scrollController.position.pixels ==
-          _scrollController.position.maxScrollExtent) {
+      if (_scrollController.position.pixels == _scrollController.position.maxScrollExtent) {
         _fetchTrips();
       }
     });
   }
 
-
-//fetches trip
+  // Fetch trips from Firestore
   Future<void> _fetchTrips() async {
     if (_isLoading || !_hasMore) return;
     setState(() => _isLoading = true);
@@ -79,6 +77,110 @@ Timer? _removeOldTripsTimer;
     }
   }
 
+  // Launch phone number
+  Future<void> _launchPhoneNumber(String phoneNumber) async {
+    final Uri launchUri = Uri(scheme: 'tel', path: phoneNumber);
+    if (await canLaunchUrl(launchUri)) {
+      await launchUrl(launchUri);
+    } else {
+      print('Could not launch $launchUri');
+    }
+  }
+
+  // Geocode address to latitude and longitude
+  Future<Map<String, double>> _geocodeAddress(String address) async {
+    final response = await http.get(Uri.parse(
+      'https://nominatim.openstreetmap.org/search?format=json&q=${Uri.encodeComponent(address)}'
+    ));
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      if (data.isNotEmpty) {
+        return {
+          'latitude': double.parse(data[0]['lat']),
+          'longitude': double.parse(data[0]['lon']),
+        };
+      }
+    }
+    throw Exception('Failed to geocode address');
+  }
+
+  // Launch OpenStreetMap with directions
+  Future<void> _launchOpenStreetMapWithDirections(String tripId) async {
+    try {
+      DocumentSnapshot tripSnapshot = await FirebaseFirestore.instance
+          .collection('trips')
+          .doc(tripId)
+          .get();
+
+      if (tripSnapshot.exists) {
+        final data = tripSnapshot.data() as Map<String, dynamic>;
+        final pickupLocation = data['pickupLocation'] as String;
+        final deliveryLocation = data['deliveryLocation'] as String;
+
+        // Try to parse as coordinates
+        final pickupCoords = _parseCoordinates(pickupLocation);
+        final deliveryCoords = _parseCoordinates(deliveryLocation);
+
+        double pickupLatitude;
+        double pickupLongitude;
+        double deliveryLatitude;
+        double deliveryLongitude;
+
+        if (pickupCoords != null) {
+          pickupLatitude = pickupCoords['latitude']!;
+          pickupLongitude = pickupCoords['longitude']!;
+        } else {
+          final pickupData = await _geocodeAddress(pickupLocation);
+          pickupLatitude = pickupData['latitude']!;
+          pickupLongitude = pickupData['longitude']!;
+        }
+
+        if (deliveryCoords != null) {
+          deliveryLatitude = deliveryCoords['latitude']!;
+          deliveryLongitude = deliveryCoords['longitude']!;
+        } else {
+          final deliveryData = await _geocodeAddress(deliveryLocation);
+          deliveryLatitude = deliveryData['latitude']!;
+          deliveryLongitude = deliveryData['longitude']!;
+        }
+
+        final String openStreetMapUrl =
+            'https://www.openstreetmap.org/directions?engine=graphhopper_car&route=$pickupLatitude%2C$pickupLongitude%3B$deliveryLatitude%2C$deliveryLongitude';
+
+        final Uri launchUri = Uri.parse(openStreetMapUrl);
+
+        if (await canLaunchUrl(launchUri)) {
+          await launchUrl(launchUri);
+        } else {
+          print('Could not launch $launchUri');
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Trip details not found")),
+          );
+        }
+      }
+    } catch (e) {
+      print("Error fetching trip details: $e");
+    }
+  }
+
+  // Helper function to parse coordinates from string
+  Map<String, double>? _parseCoordinates(String location) {
+    final parts = location.split(',');
+    if (parts.length == 2) {
+      final latitude = double.tryParse(parts[0]);
+      final longitude = double.tryParse(parts[1]);
+      if (latitude != null && longitude != null) {
+        return {'latitude': latitude, 'longitude': longitude};
+      }
+    }
+    return null;
+  }
+
+  // Refresh trip list
   Future<void> _refreshTrips() async {
     await _removeOldTrips();
 
@@ -89,7 +191,8 @@ Timer? _removeOldTripsTimer;
     });
     await _fetchTrips();
   }
-//removes trip which iss olfer than 30 mins
+
+  // Remove trips older than 30 minutes
   Future<void> _removeOldTrips() async {
     final now = DateTime.now();
     final cutoff = now.subtract(const Duration(minutes: 30));
@@ -114,6 +217,7 @@ Timer? _removeOldTripsTimer;
   String _getSortField() => _selectedSortOption == 'Timestamp Newest First'
       ? 'timestamp'
       : 'timestamp';
+
   bool _getSortDescending() => _selectedSortOption == 'Timestamp Newest First';
 
   int _sortTrips(Map<String, dynamic> a, Map<String, dynamic> b) {
@@ -134,8 +238,9 @@ Timer? _removeOldTripsTimer;
   int _compareByIntegerPart(double? num1, double? num2) {
     return (num1?.truncate() ?? 0).compareTo(num2?.truncate() ?? 0);
   }
-//phone ocon launches with deletion tooooo
-  Future<void> _launchPhone(String phoneNumber, String tripId) async {
+
+  // Delete trip with confirmation
+  Future<void> _deleteTripWithConfirmation(String tripId) async {
     try {
       DocumentSnapshot tripSnapshot = await FirebaseFirestore.instance
           .collection('trips')
@@ -143,17 +248,41 @@ Timer? _removeOldTripsTimer;
           .get();
 
       if (tripSnapshot.exists) {
-        final Uri launchUri = Uri(scheme: 'tel', path: phoneNumber);
-        if (await canLaunchUrl(launchUri)) {
+        // Show a confirmation dialog before deleting the trip
+        bool? confirmed = await showDialog<bool>(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text('Confirm Trip?'),
+              content: Text('Are you sure you want to select this trip'),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(false); 
+                  },
+                  child: Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(true); 
+                  },
+                  child: Text('Confirm'),
+                ),
+              ],
+            );
+          },
+        );
+
+        if (confirmed == true) {
           await _deleteTrip(tripId);
-          await launchUrl(launchUri);
-        } else {
-          print('Could not launch $launchUri');
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Trip deleted successfully")),
+          );
         }
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("User Already Booked")),
+            const SnackBar(content: Text("Trip not found")),
           );
         }
       }
@@ -162,6 +291,7 @@ Timer? _removeOldTripsTimer;
     }
   }
 
+  // Delete trip from Firestore
   Future<void> _deleteTrip(String tripId) async {
     try {
       await FirebaseFirestore.instance.collection('trips').doc(tripId).delete();
@@ -180,12 +310,12 @@ Timer? _removeOldTripsTimer;
           PopupMenuButton<String>(
             onSelected: (value) {
               setState(() {
-                  _selectedSortOption = value;
-                  _tripDataList.clear();
-                  _lastDocument = null;
-                  _hasMore = true;
-                  _fetchTrips();
-                });
+                _selectedSortOption = value;
+                _tripDataList.clear();
+                _lastDocument = null;
+                _hasMore = true;
+                _fetchTrips();
+              });
             },
             itemBuilder: (context) => [
               'Timestamp Newest First',
@@ -234,13 +364,33 @@ Timer? _removeOldTripsTimer;
                         ),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.phone),
+                        icon: const Icon(Icons.bookmark),
                         onPressed: () {
                           final phoneNumber = tripData['phone'] ?? '';
                           final tripId = tripData['tripId'] ?? '';
                           if (phoneNumber.isNotEmpty && tripId.isNotEmpty) {
-                            _launchPhone(phoneNumber, tripId);
+                            _deleteTripWithConfirmation(tripId);
                           }
+                        },
+                      ),
+                      SizedBox(
+                        width: 10,
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.phone),
+                        onPressed: () {
+                          final phoneNumber = tripData['phone'] ?? '';
+                          _launchPhoneNumber(phoneNumber);
+                        },
+                      ),
+                      SizedBox(
+                        width: 10,
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.location_history),
+                        onPressed: () {
+                          final tripId = tripData['tripId'] ?? '';
+                          _launchOpenStreetMapWithDirections(tripId);
                         },
                       ),
                     ],
@@ -290,4 +440,3 @@ Timer? _removeOldTripsTimer;
     super.dispose();
   }
 }
-

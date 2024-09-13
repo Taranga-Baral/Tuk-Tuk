@@ -54,6 +54,7 @@ dependencies:
   flutter_image_compress: ^2.3.0
   vibration: ^2.0.0
   card_loading: ^0.3.2
+  youtube_player_flutter: ^9.0.3
   
 
 

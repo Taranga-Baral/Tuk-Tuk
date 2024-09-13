@@ -19,6 +19,8 @@ class DriverAuthPage extends StatefulWidget {
   _DriverAuthPageState createState() => _DriverAuthPageState();
 }
 
+Color _color = const Color.fromARGB(255, 189, 62, 228);
+
 class _DriverAuthPageState extends State<DriverAuthPage> {
   void showSnackBar(BuildContext context, String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -231,6 +233,9 @@ class _DriverAuthPageState extends State<DriverAuthPage> {
         // Format the date and update the controller
         _dobController.text =
             '${_selectedDateOfBirth!.toLocal()}'.split(' ')[0];
+        _color = _color == const Color.fromARGB(255, 189, 62, 228)
+            ? const Color.fromARGB(255, 14, 199, 54)
+            : const Color.fromARGB(255, 189, 62, 228);
       });
     }
   }
@@ -246,7 +251,6 @@ class _DriverAuthPageState extends State<DriverAuthPage> {
     String? savedEmail = prefs.getString('driverEmail');
 
     if (savedEmail != null) {
-      
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const DriverHomePage()),
@@ -279,17 +283,13 @@ class _DriverAuthPageState extends State<DriverAuthPage> {
                     decorationColor: Color.fromARGB(255, 101, 12, 185)),
               ),
             ),
-
-
-SizedBox(
-  height: 5,
-),
+            SizedBox(
+              height: 5,
+            ),
             GestureDetector(
               onTap: () {
-                Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => SignInPage()));
+                Navigator.pushReplacement(context,
+                    MaterialPageRoute(builder: (context) => SignInPage()));
               },
               child: const Text(
                 'Passenger Mode',
@@ -300,45 +300,45 @@ SizedBox(
                     decorationColor: Color.fromARGB(255, 101, 12, 185)),
               ),
             ),
-
-
-
-            EasyStepper(
-              activeStep: _activeStep,
-              onStepReached: (index) {
-                setState(() {
-                  if (_activeStep == 0 && !_termsAccepted && index > 0) {
-                    // Prevent navigation if terms are not accepted
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                          content:
-                              Text('Please accept the terms and conditions.')),
-                    );
-                  } else {
-                    _activeStep = index;
-                  }
-                });
-              },
-              steps: const [
-                EasyStep(
-                  title: 'Terms & Conditions',
-                  icon: Icon(Icons.assignment),
-                ),
-                EasyStep(
-                  title: 'Vehicle Info',
-                  icon: Icon(Icons.car_rental_rounded),
-                ),
-                EasyStep(
-                  title: 'Documents',
-                  icon: Icon(Icons.attach_file_outlined),
-                ),
-                EasyStep(
-                  title: 'Personal Info',
-                  icon: Icon(Icons.person),
-                ),
-              ],
+            SizedBox(
+              height: MediaQuery.of(context).size.height * 0.17,
+              width: MediaQuery.of(context).size.width,
+              child: EasyStepper(
+                activeStep: _activeStep,
+                onStepReached: (index) {
+                  setState(() {
+                    if (_activeStep == 0 && !_termsAccepted && index > 0) {
+                      // Prevent navigation if terms are not accepted
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content: Text(
+                                'Please accept the terms and conditions.')),
+                      );
+                    } else {
+                      _activeStep = index;
+                    }
+                  });
+                },
+                steps: const [
+                  EasyStep(
+                    title: 'Terms & Conditions',
+                    icon: Icon(Icons.assignment),
+                  ),
+                  EasyStep(
+                    title: 'Vehicle Info',
+                    icon: Icon(Icons.car_rental_rounded),
+                  ),
+                  EasyStep(
+                    title: 'Documents',
+                    icon: Icon(Icons.attach_file_outlined),
+                  ),
+                  EasyStep(
+                    title: 'Personal Info',
+                    icon: Icon(Icons.person),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 20),
             Expanded(
               child: SingleChildScrollView(
                 child: Column(
@@ -346,7 +346,8 @@ SizedBox(
                     if (_activeStep == 0) ...[
                       // Terms haru
                       Container(
-                        padding: const EdgeInsets.all(16.0),
+                        padding: const EdgeInsets.only(
+                            left: 20, right: 20, bottom: 20),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -358,7 +359,7 @@ SizedBox(
                             SingleChildScrollView(
                               scrollDirection: Axis.vertical,
                               child: SizedBox(
-                                height: 400, 
+                                height: 400,
                                 child: ListView(
                                   children: [
                                     Text(
@@ -383,22 +384,41 @@ SizedBox(
                               ],
                             ),
                             const SizedBox(height: 20),
-                            ElevatedButton(
-                              onPressed: () {
-                                if (_termsAccepted) {
-                                  setState(() {
-                                    _activeStep =
-                                        1; // Move to Vehicle Info step
-                                  });
-                                } else {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                        content: Text(
-                                            'Please accept the terms and conditions.')),
-                                  );
-                                }
-                              },
-                              child: const Text('Accept and Proceed'),
+                            ClipRRect(
+                              borderRadius:
+                                  const BorderRadius.all(Radius.circular(12)),
+                              child: GestureDetector(
+                                onTap: () {
+                                  if (_termsAccepted) {
+                                    setState(() {
+                                      _activeStep =
+                                          1; // Move to Vehicle Info step
+                                    });
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                          content: Text(
+                                              'Please accept the terms and conditions.')),
+                                    );
+                                  }
+                                },
+                                child: Container(
+                                  height:
+                                      MediaQuery.of(context).size.height * 0.07,
+                                  width: MediaQuery.of(context).size.width,
+                                  color: _color,
+                                  child: const Center(
+                                    child: Text(
+                                      'Agree and Continue',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 26,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
                             ),
                           ],
                         ),
@@ -421,72 +441,268 @@ SizedBox(
                           );
                         }).toList(),
                       ),
+                      SizedBox(
+                        height: 5,
+                      ),
+
                       TextField(
                         controller: _numberPlateController,
                         decoration: const InputDecoration(
+                          prefixIconColor:
+                              const Color.fromARGB(255, 187, 109, 201),
                           labelText: 'Number Plate',
+                          prefixIcon:
+                              Icon(Icons.format_list_numbered_rtl_outlined),
+                          filled: true,
+                          fillColor: Colors.white12,
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                                color: Color.fromARGB(255, 182, 116, 194)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                                color: Color.fromARGB(255, 200, 54, 244)),
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(18)),
+                          ),
                         ),
                       ),
+                      const SizedBox(height: 25),
 
                       TextField(
                         controller: _brandController,
                         decoration: const InputDecoration(
+                          prefixIconColor:
+                              const Color.fromARGB(255, 187, 109, 201),
                           labelText: 'Brand',
+                          prefixIcon: Icon(Icons.electric_rickshaw_outlined),
+                          filled: true,
+                          fillColor: Colors.white12,
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                                color: Color.fromARGB(255, 182, 116, 194)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                                color: Color.fromARGB(255, 200, 54, 244)),
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(18)),
+                          ),
                         ),
                       ),
+                      const SizedBox(height: 25),
 
                       TextField(
                         controller: _colorController,
                         decoration: const InputDecoration(
+                          prefixIconColor:
+                              const Color.fromARGB(255, 187, 109, 201),
                           labelText: 'Color',
+                          prefixIcon: Icon(Icons.color_lens_outlined),
+                          filled: true,
+                          fillColor: Colors.white12,
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                                color: Color.fromARGB(255, 182, 116, 194)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                                color: Color.fromARGB(255, 200, 54, 244)),
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(18)),
+                          ),
                         ),
                       ),
 
                       const SizedBox(height: 20),
-                      ElevatedButton(
-                        onPressed: () {
-                          setState(() {
-                            _activeStep = 2; // Move to Documents step
-                          });
-                        },
-                        child: const Text('Next'),
+
+                      ClipRRect(
+                        borderRadius:
+                            const BorderRadius.all(Radius.circular(12)),
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _activeStep = 2;
+                            });
+                          },
+                          child: Container(
+                            height: MediaQuery.of(context).size.height * 0.07,
+                            width: MediaQuery.of(context).size.width,
+                            color: _color,
+                            child: const Center(
+                              child: Text(
+                                'Next',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 26,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
                     ],
                     if (_activeStep == 2) ...[
                       // Documents Step
-                      ElevatedButton(
-                        onPressed: () => _pickImage('bluebook'),
-                        child: const Text('Upload Bluebook Photo'),
+                      // ElevatedButton(
+                      //   onPressed: () => _pickImage('bluebook'),
+                      //   child: const Text('Upload Bluebook Photo'),
+                      // ),
+                      ClipRRect(
+                        borderRadius:
+                            const BorderRadius.all(Radius.circular(12)),
+                        child: GestureDetector(
+                          onTap: () => _pickImage('bluebook'),
+                          child: Container(
+                            height: MediaQuery.of(context).size.height * 0.055,
+                            width: MediaQuery.of(context).size.width * 0.9,
+                            color: _color,
+                            child: const Center(
+                              child: Text(
+                                'Upload BlueBook Photo',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      SizedBox(
+                        height: 25,
                       ),
                       if (_bluebookPhoto != null) ...[
                         Image.file(_bluebookPhoto!),
                       ],
-                      ElevatedButton(
-                        onPressed: () => _pickImage('citizenshipFront'),
-                        child: const Text('Upload Citizenship Front Photo'),
+
+                      ClipRRect(
+                        borderRadius:
+                            const BorderRadius.all(Radius.circular(12)),
+                        child: GestureDetector(
+                          onTap: () => _pickImage('citizenshipFront'),
+                          child: Container(
+                            height: MediaQuery.of(context).size.height * 0.055,
+                            width: MediaQuery.of(context).size.width * 0.9,
+                            color: _color,
+                            child: const Center(
+                              child: Text(
+                                'Upload Citizenship Front Photo',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
+
                       if (_citizenshipFrontPhoto != null) ...[
                         Image.file(_citizenshipFrontPhoto!),
                       ],
-                      ElevatedButton(
-                        onPressed: () => _pickImage('licenseFront'),
-                        child: const Text('Upload License Front Photo'),
+
+                      SizedBox(
+                        height: 25,
                       ),
+                      ClipRRect(
+                        borderRadius:
+                            const BorderRadius.all(Radius.circular(12)),
+                        child: GestureDetector(
+                          onTap: () => _pickImage('licenseFront'),
+                          child: Container(
+                            height: MediaQuery.of(context).size.height * 0.055,
+                            width: MediaQuery.of(context).size.width * 0.9,
+                            color: _color,
+                            child: const Center(
+                              child: Text(
+                                'Upload License Front Photo',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+
                       if (_licenseFrontPhoto != null) ...[
                         Image.file(_licenseFrontPhoto!),
                       ],
-                      ElevatedButton(
-                        onPressed: () => _pickImage('selfieWithCitizenship'),
-                        child:
-                            const Text('Upload Selfie with Citizenship Photo'),
+                      // ElevatedButton(
+                      //   onPressed: () => _pickImage(''),
+                      //   child:
+                      //       const Text(''),
+                      // ),
+
+                      SizedBox(
+                        height: 25,
                       ),
+                      ClipRRect(
+                        borderRadius:
+                            const BorderRadius.all(Radius.circular(12)),
+                        child: GestureDetector(
+                          onTap: () => _pickImage('selfieWithCitizenship'),
+                          child: Container(
+                            height: MediaQuery.of(context).size.height * 0.055,
+                            width: MediaQuery.of(context).size.width * 0.9,
+                            color: _color,
+                            child: const Center(
+                              child: Text(
+                                'Upload Selfie with Citizenship Photo',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+
                       if (_selfieWithCitizenshipPhoto != null) ...[
                         Image.file(_selfieWithCitizenshipPhoto!),
                       ],
-                      ElevatedButton(
-                        onPressed: () => _pickImage('selfieWithLicense'),
-                        child: const Text('Upload Selfie with License Photo'),
+                      // ElevatedButton(
+                      //   onPressed: () => _pickImage(''),
+                      //   child: const Text(''),
+                      // ),
+                      SizedBox(
+                        height: 25,
                       ),
+                      ClipRRect(
+                        borderRadius:
+                            const BorderRadius.all(Radius.circular(12)),
+                        child: GestureDetector(
+                          onTap: () => _pickImage('selfieWithLicense'),
+                          child: Container(
+                            height: MediaQuery.of(context).size.height * 0.055,
+                            width: MediaQuery.of(context).size.width * 0.9,
+                            color: _color,
+                            child: const Center(
+                              child: Text(
+                                'Upload Selfie with License Photo',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+
                       if (_selfieWithLicensePhoto != null) ...[
                         Image.file(_selfieWithLicensePhoto!),
                       ],
@@ -505,31 +721,110 @@ SizedBox(
                       TextField(
                         controller: _nameController,
                         decoration: const InputDecoration(
+                          prefixIconColor:
+                              const Color.fromARGB(255, 187, 109, 201),
                           labelText: 'Name',
+                          prefixIcon: Icon(Icons.person),
+                          filled: true,
+                          fillColor: Colors.white12,
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                                color: Color.fromARGB(255, 182, 116, 194)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                                color: Color.fromARGB(255, 200, 54, 244)),
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(18)),
+                          ),
                         ),
+                      ),
+
+                      SizedBox(
+                        height: 25,
                       ),
 
                       TextField(
                         controller: _addressController,
                         decoration: const InputDecoration(
+                          prefixIconColor:
+                              const Color.fromARGB(255, 187, 109, 201),
                           labelText: 'Address',
+                          prefixIcon: Icon(Icons.place_outlined),
+                          filled: true,
+                          fillColor: Colors.white12,
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                                color: Color.fromARGB(255, 182, 116, 194)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                                color: Color.fromARGB(255, 200, 54, 244)),
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(18)),
+                          ),
                         ),
                       ),
+                      SizedBox(
+                        height: 25,
+                      ),
+
 
                       TextField(
                         controller: _dobController,
                         decoration: const InputDecoration(
+                          prefixIconColor:
+                              const Color.fromARGB(255, 187, 109, 201),
                           labelText: 'Date of Birth',
+                          prefixIcon: Icon(Icons.date_range),
+                          filled: true,
+                          fillColor: Colors.white12,
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                                color: Color.fromARGB(255, 182, 116, 194)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                                color: Color.fromARGB(255, 200, 54, 244)),
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(18)),
+                          ),
                         ),
                         readOnly: true,
                         onTap: _selectDateOfBirth,
                       ),
 
+                      SizedBox(
+                        height: 25,
+                      ),
+
                       TextFormField(
                         controller: _emailController,
+                        
                         decoration: const InputDecoration(
+                          prefixIconColor:
+                              const Color.fromARGB(255, 187, 109, 201),
                           labelText: 'Email',
+                          prefixIcon: Icon(Icons.email),
+                          filled: true,
+                          fillColor: Colors.white12,
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                                color: Color.fromARGB(255, 182, 116, 194)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                                color: Color.fromARGB(255, 200, 54, 244)),
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(18)),
+                          ),
                         ),
+
+                        
                         keyboardType: TextInputType.emailAddress,
                         validator: (value) {
                           final emailRegex =
@@ -542,12 +837,34 @@ SizedBox(
                           return null; // Return null if validation is successful
                         },
                       ),
-
+SizedBox(
+  height: 25,
+),
                       TextFormField(
                         controller: _phoneController,
+                        
+
                         decoration: const InputDecoration(
-                          labelText: 'Phone Number (+977)',
+                          prefixIconColor:
+                              const Color.fromARGB(255, 187, 109, 201),
+                          labelText: 'Phone Number',
+                          prefixIcon: Icon(Icons.phone),
+                          filled: true,
+                          fillColor: Colors.white12,
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                                color: Color.fromARGB(255, 182, 116, 194)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                                color: Color.fromARGB(255, 200, 54, 244)),
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(18)),
+                          ),
                         ),
+
+
                         keyboardType: TextInputType.phone,
                         validator: (value) {
                           final phoneNumber =
@@ -560,15 +877,41 @@ SizedBox(
                         },
                       ),
 
-                      const SizedBox(height: 20),
-                      ElevatedButton(
-                        onPressed: () {
-                          if (_validateFields()) {
-                            _submitForm(); // Proceed to submit the form
-                          }
-                        },
-                        child: const Text('Submit'),
-                      )
+                      const SizedBox(height: 30),
+                      // ElevatedButton(
+                      //   onPressed: () {
+                      // if (_validateFields()) {
+                      //   _submitForm();
+                      // }
+                      //   },
+                      //   child: const Text('Submit'),
+                      // )
+                      ClipRRect(
+                        borderRadius:
+                            const BorderRadius.all(Radius.circular(12)),
+                        child: GestureDetector(
+                          onTap: () {
+                            if (_validateFields()) {
+                              _submitForm();
+                            }
+                          },
+                          child: Container(
+                            height: MediaQuery.of(context).size.height * 0.07,
+                            width: MediaQuery.of(context).size.width,
+                            color: _color,
+                            child: const Center(
+                              child: Text(
+                                'Submit',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 26,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
                     ],
                   ],
                 ),
